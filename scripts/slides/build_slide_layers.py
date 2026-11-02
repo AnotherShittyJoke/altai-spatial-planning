@@ -25,7 +25,7 @@ NE = ("https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geo
       "ne_10m_admin_1_states_provinces.geojson")
 SIMPLIFY = 0.001  # градусы, ≈ 100 м
 
-# osm_id отношений МО (admin_level=6 в границах РА, OSM на 28.10.2026) → ОКТМО из CLAUDE.md
+# osm_id отношений МО (admin_level=6 в границах РА, OSM на 28.10.2026) → ОКТМО из AGENTS.md
 MO_REL = {
     192547: ("84610000", "Кош-Агачский район"), 192563: ("84615000", "Майминский район"),
     192546: ("84620000", "Онгудайский район"), 192560: ("84625000", "Турочакский район"),

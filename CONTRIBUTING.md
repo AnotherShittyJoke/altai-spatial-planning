@@ -19,13 +19,7 @@
 - Числа из СТП берём из текста docx (`data/stp_extracted/`), а не из распознанного скана.
 
 ## Структура
-См. `README.md`. Контекст по региону — `docs/altai_context.md`, договорённости — `CLAUDE.md`.
+См. `README.md`. Контекст по региону — `docs/altai_context.md`, договорённости — `AGENTS.md`.
 
 ## Проверка чисел
 У каждого числа в слайдах должен быть источник. Числа из данных репозитория пересчитывает `python3 scripts/check_numbers.py`: код выхода 0 — всё сходится. Реестр источников ведётся в `docs/numbers_check.md`. Добавили новое число — добавьте его туда же.
-
-## Облачная среда Claude Code
-Для работы с нейросетью на claude.ai/code заведена отдельная среда проекта:
-- **Сеть:** полный доступ. Нужны PyPI, `maps.mail.ru` (зеркало Overpass) и `copernicus-dem-30m.s3.amazonaws.com` (рельеф).
-- **Переменные:** `OVERPASS_URL=https://maps.mail.ru/osm/tools/overpass/api/interpreter`, `OVERPASS_TIMEOUT=900`.
-- **Setup script:** `cd altai-spatial-planning && bash scripts/cloud_setup.sh`. Скрипт ставит `requirements.txt`, это около полутора минут.
