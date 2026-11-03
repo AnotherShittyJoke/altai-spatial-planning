@@ -45,6 +45,7 @@ okn_e = csv('data/okn/okn_by_mo_egrokn.csv').set_index('район2')
 edu = csv('data/education/obr04_summary.csv').set_index('район')
 medu = csv('data/access_inputs/medical_registry_2026_units.csv')
 meds = csv('data/access_inputs/medical_registry_summary.csv').set_index('год')
+okng = pd.read_csv(R / 'data/okn/egrokn_altai_geocoded.csv', encoding='utf-8-sig', dtype=str).fillna('')
 rows = lambda d: d[pd.to_numeric(d.iloc[:, 0], errors='coerce').notna()]  # строки таблицы с порядковым номером
 
 pop = mo['Население 1.01.2025, чел.']
@@ -156,10 +157,12 @@ CHECKS = [
     ('01', 'школ на obr04.ru', edu['школа'].sum(), 131, 0),
     ('01', 'детских садов на obr04.ru', edu['детский сад'].sum(), 32, 0),
     ('01', 'организаций ДОД на obr04.ru', edu['ДОД'].sum(), 16, 0),
-    ('03', 'точек медпомощи в реестре 2026', len(medu), 237, 0),
-    ('03', 'действующих точек в реестре 2026', medu['действует'].astype(str).eq('True').sum(), 231, 0),
+    ('03', 'точек медпомощи в реестре 2026', len(medu), 244, 0),
+    ('03', 'действующих точек в реестре 2026', medu['действует'].astype(str).eq('True').sum(), 225, 0),
     ('03', 'ФАПов в действующих точках 2026', medu.loc[medu['действует'].astype(str).eq('True') & (medu['тип'] == 'ФАП'), 'тип'].count(), 140, 0),
     ('03', 'МО в реестре 2026', meds.loc[2026, 'МО'], 39, 0),
+    ('06', 'ОКН с координатами после геокодирования', okng.loc[okng['lat'] != '', 'название'].count(), 167, 0),
+    ('06', 'ОКН уровня A (точка из ЕГРОКН)', okng['качество_гео'].str.startswith('A').sum(), 76, 0),
 ]
 
 if '--control' in sys.argv:          # контроль: заявляем 38 кандидатов вместо 37 — проверка обязана упасть
