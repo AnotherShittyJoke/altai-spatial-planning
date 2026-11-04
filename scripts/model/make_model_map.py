@@ -2,7 +2,7 @@
 
 Зоны ТЭЗ (гипотеза из docs/altai_context.md, разд. 6, по границам МО), узлы четырёх уровней,
 опорные оси, внешние выходы и природный каркас (55 ООПТ по официальным контурам, объект ЮНЕСКО).
-Историко-культурный каркас добавится после выгрузки ЕГРОКН.
+Историко-культурный каркас: точные координаты 76 ОКН из ЕГРОКН.
 Читает data/slides/layers/, data/oopt/oopt_oczk_2026-10-28.geojson, data/model/layers/, data/onp_candidates.csv,
 data/dataset_v3/settlements.csv. Пишет data/model/map_model_draft.png.
 Запуск из корня репозитория: python scripts/model/make_model_map.py
@@ -79,6 +79,11 @@ sp = small.geometry.representative_point()
 ax.scatter(sp.x, sp.y, s=22, marker="^", color="#2f6b3a", edgecolor=SURFACE, lw=0.5, zorder=4.5)
 unesco.boundary.plot(ax=ax, color="#2f6b3a", lw=1.2, ls="--", zorder=2.3)
 border.boundary.plot(ax=ax, color=INK, lw=1.4, zorder=3)
+# Только точные точки: привязки уровня B к центру НП не обозначают место ОКН.
+heritage = gpd.read_file(ROOT / 'data/okn/egrokn_altai_points_all.geojson').to_crs(CRS)
+heritage = heritage[heritage['качество'].str.startswith('A')]
+assert len(heritage) == 76
+heritage.plot(ax=ax, marker='D', color='#612e78', markersize=10, alpha=.8, zorder=4.8)
 # опорный каркас: главная ось — Р-256 (Чуйский тракт), вторые оси
 r256 = roads[roads.ref.str.contains("Р-256", na=False)]
 tel = r256[r256.name.str.contains("Телецкий", na=False)]
@@ -135,6 +140,7 @@ finish(fig, ax, extent=(x0 - 30000, y0 - 20000, x1 + 20000, y1 + 40000), basemap
                 Line2D([], [], marker="D", ls="", mfc=SURFACE, mec=INK, label="внешний выход"),
                 Patch(facecolor="none", edgecolor="#2f6b3a", hatch="////", label=f"ООПТ от 1 000 га ({len(big)})"),
                 Line2D([], [], marker="^", ls="", ms=6, color="#2f6b3a", mec=SURFACE, label=f"ООПТ меньше 1 000 га ({len(small)})"),
-                Line2D([], [], color="#2f6b3a", lw=1.2, ls="--", label="объект ЮНЕСКО «Золотые горы Алтая»")])
+                Line2D([], [], color="#2f6b3a", lw=1.2, ls="--", label="объект ЮНЕСКО «Золотые горы Алтая»"),
+                Line2D([], [], marker='D', ls='', ms=4, color='#612e78', label='76 ОКН с точными координатами (ЕГРОКН)')])
 save_map(fig, OUT / "map_model_draft.png")
 print("ok")
