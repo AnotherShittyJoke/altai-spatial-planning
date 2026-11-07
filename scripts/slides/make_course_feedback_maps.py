@@ -121,19 +121,23 @@ def main():
 
     fig, ax = base()
     st.plot(ax=ax, color='#8e948f', markersize=5, alpha=.55, zorder=5)
-    benchmark = pd.read_csv(OUT / 'onp_transport_program.csv', dtype={'oktmo': str})
-    benchmark = benchmark.merge(st.assign(oktmo=st.oktmo.astype(str)), on='oktmo',
+    official = pd.read_csv(OUT / 'onp_decree_222.csv', dtype={'oktmo': str})
+    official = official.merge(st.assign(oktmo=st.oktmo.astype(str)), on='oktmo',
                                 validate='one_to_one', how='left', indicator=True)
-    assert (benchmark._merge == 'both').all(), 'Не все ОНП сопоставлены по ОКТМО'
-    benchmark = gpd.GeoDataFrame(benchmark, geometry='geometry', crs=CRS)
-    additions = onp[~onp.oktmo.astype(str).isin(benchmark.oktmo)]
-    benchmark.plot(ax=ax, color=ECONOMY, markersize=32, edgecolor='white', lw=.5, zorder=7)
-    onp_key = [symbol('o', ECONOMY, 'ОНП в транспортной программе РА'),
-               symbol('o', FEDERAL, 'Дополнение команды к этой сети', 'white')]
-    export_comparison(benchmark, onp, additions)
-    additions.plot(ax=ax, facecolor='none', edgecolor=FEDERAL, markersize=46, lw=1.1, zorder=6)
+    assert (official._merge == 'both').all(), 'Не все ОНП сопоставлены по ОКТМО'
+    official = gpd.GeoDataFrame(official, geometry='geometry', crs=CRS)
+    additions = onp[~onp.oktmo.astype(str).isin(official.oktmo)]
+    capital = additions[additions.oktmo.eq(84701000001)]
+    rural = additions.drop(capital.index)
+    official.plot(ax=ax, color=ECONOMY, markersize=32, edgecolor='white', lw=.5, zorder=7)
+    onp_key = [symbol('o', ECONOMY, 'Сельский ОНП по постановлению № 222'),
+               symbol('o', FEDERAL, 'Дополнительный сельский пункт команды', 'white'),
+               symbol('s', REGIONAL, 'Горно-Алтайск, городское ядро')]
+    export_comparison(official, onp, additions)
+    rural.plot(ax=ax, facecolor='none', edgecolor=FEDERAL, markersize=46, lw=1.1, zorder=6)
+    capital.plot(ax=ax, color=REGIONAL, marker='s', markersize=32, edgecolor='white', lw=.6, zorder=8)
     for name, offset in {
-        'Горно-Алтайск': (-6, 8), 'Алферово': (7, 2), 'Манжерок': (-6, -3),
+        'Горно-Алтайск': (8, -7), 'Майма': (-6, 8), 'Манжерок': (-6, -3),
         'Элекмонар': (5, 6), 'Беляши': (-6, 5), 'Балыкча': (5, 5),
     }.items():
         p = onp.loc[onp['name'].str.endswith(name), 'geometry'].iloc[0]
@@ -177,12 +181,15 @@ def main():
 def export_comparison(official, onp, additions):
     both = official.oktmo.isin(onp.oktmo.astype(str))
     result = pd.concat([
-        official[['oktmo', 'settlement', 'mo']].assign(
-            status=both.map({True: 'оба перечня', False: 'только транспортная программа РА'})
+        official[['oktmo', 'settlement', 'mo', 'pdf_page']].assign(
+            status=both.map({True: 'оба перечня', False: 'только постановление № 222'})
         ),
         additions.rename(columns={'name': 'settlement'})[['oktmo', 'settlement', 'mo', 'основание']]
-        .assign(status='дополнение команды'),
+        .assign(status=additions.oktmo.eq(84701000001).map(
+            {True: 'городское ядро команды', False: 'дополнительный сельский пункт команды'}
+        )),
     ], ignore_index=True)
+    result['pdf_page'] = result.pdf_page.astype('Int64')
     result.to_csv(OUT / 'onp_comparison.csv', index=False)
 
 
