@@ -37,13 +37,15 @@ def symbol(marker, color, label, fill=None):
     return Line2D([], [], marker=marker, ls='', ms=6, mec=color, mfc=fill or color, label=label)
 
 
-def mark(ax, geometry, label, color=INK, marker='o', offset=(4, 4), size=23):
+def mark(ax, geometry, label, color=INK, marker='o', offset=(4, 4), size=23, leader=False):
     ax.scatter(geometry.x, geometry.y, marker=marker, s=size, color=color,
                edgecolors='white', linewidths=.65, zorder=8)
     if label:
         ax.annotate(label, (geometry.x, geometry.y), xytext=offset, textcoords='offset points',
                     color=color, fontsize=7.3, path_effects=HALO,
-                    ha='right' if offset[0] < 0 else 'left', zorder=10)
+                    ha='right' if offset[0] < 0 else 'left', zorder=10,
+                    arrowprops={'arrowstyle': '-', 'color': color, 'lw': .65,
+                                'shrinkA': 2, 'shrinkB': 3} if leader else None)
 
 
 def main():
@@ -67,8 +69,9 @@ def main():
         fig, ax = map_figure()
         if external:
             view = box(x0 - 180000, y0 - 90000, x1 + 120000, y1 + 155000)
-            neighbors = geo('slides/layers/neighbors_admin1.geojson').clip(view)
-            neighbors.boundary.plot(ax=ax, color='#898682', lw=.55, ls='--', zorder=1)
+            # Обрезка полигонов создает ложные границы по краю прямоугольника.
+            boundaries = geo('slides/layers/neighbors_admin1.geojson').boundary.clip(view)
+            boundaries.plot(ax=ax, color='#898682', lw=.55, ls='--', zorder=1)
             geo('slides/layers/r256_barnaul.geojson').plot(ax=ax, color=FEDERAL, lw=1.65, zorder=4)
         else:
             mo.boundary.plot(ax=ax, color='#8b8a83', lw=.45, zorder=1)
@@ -168,7 +171,7 @@ def main():
             'checkpoint': (FEDERAL, 'D', 30),
         }[row.kind]
         mark(ax, row.geometry, row.label.replace('|', '\n'), style[0], style[1],
-             (row.dx, row.dy), style[2])
+             (row.dx, row.dy), style[2], leader=row.label == 'Аэропорт|Горно-Алтайск')
     save(fig, ax, (x0-140000, y0-65000, x1+105000, y1+162000), road_keys + [
         symbol('^', REGIONAL, 'Аэропорт'), symbol('s', REGIONAL, 'Транспортный узел'),
         symbol('o', INK, 'Населенный пункт'), symbol('D', FEDERAL, 'Пункт пропуска'),
