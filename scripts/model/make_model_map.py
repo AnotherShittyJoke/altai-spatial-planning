@@ -94,7 +94,11 @@ tel.plot(ax=ax, color=INK, lw=1.8, zorder=4)
 axes = gpd.read_file(ROOT / "data" / "model" / "layers" / "axes_secondary.geojson").to_crs(CRS)
 axes.plot(ax=ax, color=INK, lw=1.8, ls="--", zorder=4)
 # узлы
-ax.scatter(onp.geometry.x, onp.geometry.y, s=14, color=SURFACE, edgecolor=INK, lw=0.8, zorder=5)
+official = csv("data/slides/onp_decree_222.csv").oktmo.astype(str)
+is_official = onp.oktmo.astype(str).isin(official)
+assert (is_official.sum(), (~is_official).sum()) == (9, 6)
+ax.scatter(onp[is_official].geometry.x, onp[is_official].geometry.y, s=14, color=SURFACE, edgecolor=INK, lw=0.8, zorder=5)
+ax.scatter(onp[~is_official].geometry.x, onp[~is_official].geometry.y, s=20, marker="D", color=SURFACE, edgecolor=INK, lw=0.8, zorder=5)
 c = gpd.GeoSeries([pt(n) for n in centers if n not in INTER], crs=CRS)
 ax.scatter(c.x, c.y, s=45, color=INK, edgecolor=SURFACE, lw=0.8, zorder=6)
 for n in INTER:
@@ -132,7 +136,8 @@ finish(fig, ax, extent=(x0 - 30000, y0 - 20000, x1 + 20000, y1 + 40000), basemap
                [Line2D([], [], marker="o", ls="", ms=12, mfc="#b9472a", mec=INK, label="ядро: Горно-Алтайск — Майма"),
                 Line2D([], [], marker="s", ls="", ms=9, mfc="#b9472a", mec=INK, label="межрайонный центр (предложение)"),
                 Line2D([], [], marker="o", ls="", ms=6, mfc=INK, mec=SURFACE, label="районный центр"),
-                Line2D([], [], marker="o", ls="", ms=4.5, mfc=SURFACE, mec=INK, label="кандидат в опорный населённый пункт (37)"),
+                Line2D([], [], marker="o", ls="", ms=4.5, mfc=SURFACE, mec=INK, label="официальный сельский ОНП (9)"),
+                Line2D([], [], marker="D", ls="", ms=4.5, mfc=SURFACE, mec=INK, label="перспективный опорный центр команды (6)"),
                 Line2D([], [], marker="P", ls="", ms=7, color="#b9472a", label="новая точка стационарной помощи (предложение)"),
                 Line2D([], [], color=INK, lw=3.0, label="главная ось: Р-256 «Чуйский тракт»"),
                 Line2D([], [], color=INK, lw=1.8, label="вторая ось: Р-256, подъезд к Телецкому озеру (Майма — Артыбаш)"),

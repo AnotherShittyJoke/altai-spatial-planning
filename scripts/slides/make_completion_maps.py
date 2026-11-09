@@ -56,12 +56,21 @@ def main():
         if lo == 0:
             label = 'меньше 500'
         handles.append(Line2D([], [], marker='o', ls='', ms=size**.5, color='#789b92', label=f'Жителей (перепись-2020): {label}'.replace(',', ' ')))
-    onp.plot(ax=ax, facecolor='none', edgecolor='#b9472a', markersize=85, linewidth=.9, zorder=6)
+    official = read_csv('data/slides/onp_decree_222.csv').oktmo.astype(str)
+    is_official = onp.oktmo.astype(str).isin(official)
+    assert (is_official.sum(), (~is_official).sum()) == (9, 6)
+    onp[is_official].plot(ax=ax, facecolor='none', edgecolor='#b9472a', markersize=85, linewidth=.9, zorder=6)
+    onp[~is_official].plot(ax=ax, facecolor='none', edgecolor='#33637d', marker='s', markersize=70, linewidth=.9, zorder=6)
     for name, dx, dy in [('Горно-Алтайск', -70000, 15000), ('Майма', 20000, 10000), ('Кош-Агач', 12000, -10000), ('Усть-Кан', -60000, 8000)]:
-        p = onp[onp['name'].str.endswith(name)].geometry.iloc[0]
+        source = st if name in {'Горно-Алтайск', 'Майма'} else onp
+        key = 'settlement' if source is st else 'name'
+        p = source[source[key].str.endswith(name)].geometry.iloc[0]
         ax.annotate(name, (p.x, p.y), (p.x+dx, p.y+dy), fontsize=8, path_effects=HALO,
                     arrowprops={'arrowstyle':'-', 'color':INK, 'lw':.5}, zorder=8)
-    handles.append(Line2D([], [], marker='o', ls='', ms=8, mfc='none', mec='#b9472a', label='37 опорных населенных пунктов (решение 03.11.2026)'))
+    handles += [
+        Line2D([], [], marker='o', ls='', ms=8, mfc='none', mec='#b9472a', label='Официальные сельские ОНП по постановлению № 222 (9)'),
+        Line2D([], [], marker='s', ls='', ms=8, mfc='none', mec='#33637d', label='Перспективные опорные центры команды (6)'),
+    ]
     finish(fig, ax, extent, handles, basemap_alpha=.5)
     save_map(fig, OUT / 'map_04_settlement.png')
 

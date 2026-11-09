@@ -130,23 +130,22 @@ def main():
     assert (official._merge == 'both').all(), 'Не все ОНП сопоставлены по ОКТМО'
     official = gpd.GeoDataFrame(official, geometry='geometry', crs=CRS)
     additions = onp[~onp.oktmo.astype(str).isin(official.oktmo)]
-    capital = additions[additions.oktmo.eq(84701000001)]
-    rural = additions.drop(capital.index)
+    assert (len(official), len(additions)) == (9, 6)
     official.plot(ax=ax, color=ECONOMY, markersize=32, edgecolor='white', lw=.5, zorder=7)
-    onp_key = [symbol('o', ECONOMY, 'Сельский ОНП по постановлению № 222'),
-               symbol('o', FEDERAL, 'Дополнительный сельский пункт команды', 'white'),
-               symbol('s', REGIONAL, 'Горно-Алтайск, городское ядро')]
+    onp_key = [symbol('o', ECONOMY, 'Официальный сельский ОНП по постановлению № 222 (9)'),
+               symbol('o', FEDERAL, 'Перспективный опорный центр команды (6)', 'white')]
     export_comparison(official, onp, additions)
-    rural.plot(ax=ax, facecolor='none', edgecolor=FEDERAL, markersize=46, lw=1.1, zorder=6)
-    capital.plot(ax=ax, color=REGIONAL, marker='s', markersize=32, edgecolor='white', lw=.6, zorder=8)
+    additions.plot(ax=ax, facecolor='none', edgecolor=FEDERAL, markersize=46, lw=1.1, zorder=6)
     for name, offset in {
-        'Горно-Алтайск': (8, -7), 'Майма': (-6, 8), 'Манжерок': (-6, -3),
-        'Элекмонар': (5, 6), 'Беляши': (-6, 5), 'Балыкча': (5, 5),
+        'Акташ': (-10, 10), 'Кебезень': (18, 18), 'Каракокша': (18, -18),
+        'Иогач': (-18, -18), 'Беляши': (-10, 8), 'Катанда': (10, -10),
     }.items():
         p = onp.loc[onp['name'].str.endswith(name), 'geometry'].iloc[0]
         ax.annotate(name, (p.x, p.y), xytext=offset, textcoords='offset points',
                     fontsize=7.3, ha='right' if offset[0] < 0 else 'left',
-                    path_effects=HALO, zorder=10)
+                    path_effects=HALO, zorder=10,
+                    arrowprops={'arrowstyle': '-', 'color': FEDERAL, 'lw': .65,
+                                'shrinkA': 2, 'shrinkB': 3})
     save(fig, ax, interior, onp_key + [symbol('o', '#8e948f', 'Другие населенные пункты')]
          + road_keys, 'onp_course')
 
@@ -188,9 +187,7 @@ def export_comparison(official, onp, additions):
             status=both.map({True: 'оба перечня', False: 'только постановление № 222'})
         ),
         additions.rename(columns={'name': 'settlement'})[['oktmo', 'settlement', 'mo', 'основание']]
-        .assign(status=additions.oktmo.eq(84701000001).map(
-            {True: 'городское ядро команды', False: 'дополнительный сельский пункт команды'}
-        )),
+        .assign(status='перспективный опорный центр команды'),
     ], ignore_index=True)
     result['pdf_page'] = result.pdf_page.astype('Int64')
     result.to_csv(OUT / 'onp_comparison.csv', index=False)
