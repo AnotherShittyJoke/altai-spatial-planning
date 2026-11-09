@@ -81,15 +81,14 @@ hosp = gpd.read_parquet(OUT / "hospitals_services.parquet").to_crs(4326)
 pmsp += [dict(osm_id=str(h.osm_id), name=h["name"], amenity="hospital", healthcare="hospital",
               kind="больница, поликлиника", geometry=h.geometry) for _, h in hosp.iterrows()]
 
-# участковые больницы и врачебные амбулатории по СТП (табл. III.7.5) — через кандидатов в ОНП, координаты — точка НП.
+# участковые больницы и врачебные амбулатории по СТП (табл. III.7.5), координаты — точка НП.
 # Балыктуюль, Кокоря, Барагаш есть и в перечне планируемых амбулаторий СТП (прил. 4) — существование не подтверждено,
 # поэтому в базовый расчёт не входят (kind с пометкой «план»)
 STP_PLANNED = {"село Балыктуюль", "село Кокоря", "село Барагаш"}
-onp = pd.read_csv(ROOT / "data" / "onp_candidates.csv", encoding="utf-8-sig")
-onp = onp[onp["основание"].str.contains("СТП")]
+stp = pd.read_csv(OUT / "stp_primary_care_settlements.csv", encoding="utf-8-sig")
 pmsp += [dict(osm_id=f"stp:{r.id}", name=f"участковая больница / врачебная амбулатория, {r['name']}", amenity="", healthcare="",
               kind="амбулатория по СТП (план)" if r["name"] in STP_PLANNED else "участковая больница / амбулатория (СТП)",
-              geometry=Point(r.longitude, r.latitude)) for _, r in onp.iterrows()]
+              geometry=Point(r.longitude, r.latitude)) for _, r in stp.iterrows()]
 
 s = gpd.GeoDataFrame(schools, crs=4326)
 p = gpd.GeoDataFrame(pmsp, crs=4326)
